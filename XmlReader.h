@@ -35,7 +35,7 @@ struct XmlNode
 {
     string name;
     string value;
-    // TODO: добавить сраный unique_ptr.
+    // TODO: РґРѕР±Р°РІРёС‚СЊ СЃСЂР°РЅС‹Р№ unique_ptr.
     forward_list<XmlNode> nodes;
     forward_list<XmlAttribute> attributes;
 
@@ -123,10 +123,10 @@ public:
     {}
 
     optional<unique_ptr<XmlDocument>> load(const string_view& path) noexcept {
-        // Загрузка данных в буфер.
+        // Р—Р°РіСЂСѓР·РєР° РґР°РЅРЅС‹С… РІ Р±СѓС„РµСЂ.
         if(loadFileData(path) == false)
             return nullopt;
-        // Извлечение данных.
+        // РР·РІР»РµС‡РµРЅРёРµ РґР°РЅРЅС‹С….
         return parse();
     }
 
@@ -149,14 +149,14 @@ private:
     optional<unique_ptr<XmlDocument>> parse() noexcept {
         auto it = _buffer.begin();
 
-        // Считываем заголовок.
+        // РЎС‡РёС‚С‹РІР°РµРј Р·Р°РіРѕР»РѕРІРѕРє.
         auto xmlDocument = readTitle(it);
         if (xmlDocument == nullopt)
             return nullopt;
 
         _xmlDocument = move(xmlDocument.value());
 
-        // Считываем узлы.
+        // РЎС‡РёС‚С‹РІР°РµРј СѓР·Р»С‹.
         auto node = readNode(it);
         if (node == nullopt)
             return nullopt;
@@ -166,18 +166,18 @@ private:
     }
 
     optional<unique_ptr<XmlDocument>> readTitle(string::iterator& it) noexcept {
-        // Чтение начала заголовка.
+        // Р§С‚РµРЅРёРµ РЅР°С‡Р°Р»Р° Р·Р°РіРѕР»РѕРІРєР°.
         string buffer = "";
         readData(it, buffer, [](const auto& it) {return (*it == ' '); });
 
-        // Это начало заголовка?
+        // Р­С‚Рѕ РЅР°С‡Р°Р»Рѕ Р·Р°РіРѕР»РѕРІРєР°?
         if (buffer.compare("<?xml") != 0)
             return nullopt;
 
-        // Пропустить пробелы.
+        // РџСЂРѕРїСѓСЃС‚РёС‚СЊ РїСЂРѕР±РµР»С‹.
         skipSpaces(it);
 
-        // Чтение атрибутов.
+        // Р§С‚РµРЅРёРµ Р°С‚СЂРёР±СѓС‚РѕРІ.
         forward_list<unique_ptr<XmlAttribute>> attributes;
         while (it != _buffer.end() && *it != '?') {
             auto attribute = readAttribute(it);
@@ -195,7 +195,7 @@ private:
         attributes.pop_front();
         document._version = attributes.front()->value;
 
-        // Чтение конца заголовка.
+        // Р§С‚РµРЅРёРµ РєРѕРЅС†Р° Р·Р°РіРѕР»РѕРІРєР°.
         for (; it != _buffer.end(); ++it) {
             if (*it == '\n')
                 break;
@@ -210,13 +210,13 @@ private:
         skipComment(it);
         advance(it, 1);
 
-        // Чтение окрывающегося тега.
+        // Р§С‚РµРЅРёРµ РѕРєСЂС‹РІР°СЋС‰РµРіРѕСЃСЏ С‚РµРіР°.
         for (; it != _buffer.end() && *it != ' ' && *it != '>'; ++it) {
             node.name.push_back(*it);
         }
 
         skipSpaces(it);
-        // Чтение атрибутов.
+        // Р§С‚РµРЅРёРµ Р°С‚СЂРёР±СѓС‚РѕРІ.
         forward_list<unique_ptr<XmlAttribute>> attributes;
         while (it != _buffer.end() && *it != '>') {
             auto attribute = readAttribute(it);
@@ -231,11 +231,11 @@ private:
 
         advance(it, 1);
         skipSpaces(it);
-        // Чтение контента в тэге.
+        // Р§С‚РµРЅРёРµ РєРѕРЅС‚РµРЅС‚Р° РІ С‚СЌРіРµ.
         for (; it != _buffer.end(); ++it) {
-            // Пропустить комментарий
+            // РџСЂРѕРїСѓСЃС‚РёС‚СЊ РєРѕРјРјРµРЅС‚Р°СЂРёР№
             skipComment(it);
-            // Считать вложенный тег.
+            // РЎС‡РёС‚Р°С‚СЊ РІР»РѕР¶РµРЅРЅС‹Р№ С‚РµРі.
             if (it != _buffer.end() && *it == '<' && isalnum(*(it + 1)) != 0) {
                 auto childNode = readNode(it);
                 if (childNode == nullopt)
@@ -244,23 +244,18 @@ private:
                 continue;
             }
             if (*it == '<') {
-                ++it;
                 break;
             }
             node.value.push_back(*it);
         }
+        advance(it, 1);
         node.value.erase(remove(node.value.begin(), node.value.end(), '\n'), node.value.end());
         skipSpaces(it);
 
-        // Чтение закрывающегося тега.
+        // Р§С‚РµРЅРёРµ Р·Р°РєСЂС‹РІР°СЋС‰РµРіРѕСЃСЏ С‚РµРіР°.
         string name = "";
-        for (; it != _buffer.end(); ++it) {
-            if (*it == '>') {
-                ++it;
-                break;
-            }
-            name.push_back(*it);
-        }
+        readData(it, name, [](const auto& it) {return (*it == '>'); });
+        advance(it, 1);
 
         name.erase(remove(name.begin(), name.end(), '/'), name.end());
         if(node.name.compare(name) != 0)
@@ -270,17 +265,17 @@ private:
     }
 
     optional<unique_ptr<XmlAttribute>> readAttribute(string::iterator& it) noexcept {
-        // Чтение ключа.
+        // Р§С‚РµРЅРёРµ РєР»СЋС‡Р°.
         XmlAttribute attribute;
         readData(it, attribute.key, [](const auto& it) {return (*it == ' ' || *it == '='); });
 
-        // Пропустить пробелы и символы '=' и '"'.
+        // РџСЂРѕРїСѓСЃС‚РёС‚СЊ РїСЂРѕР±РµР»С‹ Рё СЃРёРјРІРѕР»С‹ '=' Рё '"'.
         skipSpaces(it);
         advance(it, 1);
         skipSpaces(it);
         advance(it, 1);
 
-        // Чтение данных.
+        // Р§С‚РµРЅРёРµ РґР°РЅРЅС‹С….
         readData(it, attribute.value, [](const auto& it) {return (*it == '"'); });
         return { make_unique<XmlAttribute>(attribute) };
     }
@@ -305,9 +300,8 @@ private:
             if (*it == '<' && *(it + 1) == '!') {
                 string buffer = "";
                 for (; it != _buffer.end(); ++it) {
-                    if (*it == '>' && buffer.find("--")) {
+                    if (*it == '>' && buffer.find("--"))
                         break;
-                    }
                 }
                 advance(it, 1);
                 skipSpaces(it);
