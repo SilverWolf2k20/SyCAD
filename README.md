@@ -1,7 +1,7 @@
 # SyCAD
 Пока еще думаю...
 ---
-![coverage](https://img.shields.io/badge/Начало_разработки-1.07.2022-blue) ![coverage](https://img.shields.io/badge/-Okolo%20IT-orange)
+![coverage](https://img.shields.io/badge/Начало_разработки-01.07.2022-blue) ![coverage](https://img.shields.io/badge/-Okolo%20IT-orange)
 
 Данный прокт находится на этапе планирования и подготовки, по этому информации пока что мало.
 ## Технолигии
